@@ -7,7 +7,7 @@ import {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
-import { unstable_useRoute as useRoute } from "react-router";
+import { useMatches } from "react-router";
 import type { DocSearchProps } from "@docsearch/react";
 import {
   DocSearchModal as OriginalDocSearchModal,
@@ -56,9 +56,7 @@ export function DocSearch({ children }: { children: React.ReactNode }) {
     onOpen,
     onClose,
     onInput,
-    // React 19 types this ref as HTMLButtonElement | null, but DocSearch's
-    // hook still expects the pre-React-19 RefObject<HTMLButtonElement>.
-    searchButtonRef: searchButtonRef as React.RefObject<HTMLButtonElement>,
+    searchButtonRef,
   });
 
   const contextValue = useMemo(
@@ -69,12 +67,15 @@ export function DocSearch({ children }: { children: React.ReactNode }) {
     [onOpen, searchButtonRef],
   );
 
-  let docsRoute = useRoute("docs");
-  let v6IndexRoute = useRoute("v6-index-layout");
-  let header =
-    docsRoute?.loaderData?.header ?? v6IndexRoute?.loaderData?.header;
-
-  let version = header?.docSearchVersion;
+  let docSearchVersion = useMatches()
+    .map((match) => match.loaderData)
+    .find(
+      (loaderData): loaderData is { docSearchVersion: string } =>
+        typeof loaderData === "object" &&
+        loaderData !== null &&
+        "docSearchVersion" in loaderData &&
+        typeof loaderData.docSearchVersion === "string",
+    )?.docSearchVersion;
 
   return (
     <DocSearchContext value={contextValue}>
@@ -87,9 +88,11 @@ export function DocSearch({ children }: { children: React.ReactNode }) {
               onClose={onClose}
               // NOTE: to use the facet for search, it has to be set in the algolia dashboard:
               // "Configuration" > "Filtering and Faceting" > "Facets"
-              searchParameters={{
-                ...(version ? { facetFilters: [`version:${version}`] } : {}),
-              }}
+              searchParameters={
+                docSearchVersion
+                  ? { facetFilters: [`version:${docSearchVersion}`] }
+                  : undefined
+              }
               {...docSearchProps}
             />,
             document.body,

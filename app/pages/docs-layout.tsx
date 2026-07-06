@@ -56,6 +56,7 @@ export async function loader({ params }: Route.LoaderArgs) {
   return {
     menu,
     header,
+    docSearchVersion: header.docSearchVersion,
   };
 }
 

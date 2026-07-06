@@ -174,6 +174,7 @@ export let loader = async () => {
     highlights: latestMajor >= 8 ? v8Highlights : v7Highlights,
     adventures: latestMajor >= 8 ? v8Adventures : v7Adventures,
     latestMajor,
+    docSearchVersion: `v${latestMajor}`,
   };
 };
 
